@@ -1,0 +1,12 @@
+extends layouts/main-layout.pug
+
+//- If I don't include the block content, I get an error: Only named blocks and mixins can appear at the top level of an extending template
+//- to call a function we need the plus sign
+block content      
+    +createPostForm(userLoggedIn)
+    .postsContainer
+
+    +createPostModals(userLoggedIn)
+
+block scripts 
+    script(src="/js/home.js")
