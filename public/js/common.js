@@ -1,3 +1,5 @@
+var cropper; //global variable
+
 $("#postTextarea, #replyTextarea").keyup(event => {
     var textbox = $(event.target);
     var value = textbox.val().trim();
@@ -76,6 +78,51 @@ $("#deletePostButton").click((event) => {
         success: () => {
             location.reload();
         }
+    })
+})
+
+$("#filePhoto").change(function () {
+    if (this.files && this.files[0]) {
+        var reader = new FileReader();
+        reader.onload = (e) => {
+            var image = document.getElementById("imagePreview"); //we need it in javascript for the Cropper class
+            image.src = e.target.result;
+            // $("#imagePreview").attr("src", e.target.result); // to the imagePreview id in mixins.pug, it adds the attribute as src
+            if (cropper !== undefined) {
+                cropper.destroy(); //in javascript, this destroys the variable
+            }
+            cropper = new Cropper(image, {  //the cdn is added to the main-layout.pug
+                aspectRatio: 1 / 1, //square
+                background: false
+            });
+
+        }
+        reader.readAsDataURL(this.files[0]);
+    } else {
+        console.log("not loaded");
+    }
+})
+
+$("#imageUploadButton").click(() => {
+    var canvas = cropper.getCroppedCanvas(); //the part inside the square gets selected
+
+    if (canvas == null) {
+        alert("Could not upload image. Make sure it is an image file.");
+        return;
+    }
+    //toBlob is used to store images and videos (converts to binary large object)
+    canvas.toBlob((blob) => {
+        var formData = new FormData();
+        formData.append("croppedImage", blob);
+
+        $.ajax({
+            url: "/api/users/profilePicture",
+            type: "POST",
+            data: formData,
+            processData: false, //this forces jQuery not to convert formData to a string
+            contentType: false, //this forces jQuery not to add a contentType-header with this request (and we won't have a so called boundary string)
+            success: () => location.reload()
+        })
     })
 })
 
