@@ -129,6 +129,38 @@ $(document).on("click", ".post", (event) => {
     }
 });
 
+$(document).on("click", ".followButton", (event) => {
+    var button = $(event.target);
+    var userId = button.data().user;
+
+    $.ajax({
+        url: `/api/users/${userId}/follow`,
+        type: "PUT",
+        success: (data, status, xhr) => {
+            if (xhr.status == 404) { //user not found
+                return;
+            }
+
+            var difference = 1;
+            if (data.following && data.following.includes(userId)) {
+                button.addClass("following");
+                button.text("Following");
+            } else {
+                button.removeClass("following");
+                button.text("Follow");
+                difference = -1;
+            }
+
+            var followersLabel = $("#followersValue");
+            if (followersLabel.length != 0) {
+                var followersText = followersLabel.text();
+                followersText = parseInt(followersText);
+                followersLabel.text(followersText + difference);
+            }
+        }
+    })
+});
+
 function getPostIdFromElement(element) { //it will go up through the tree and find the post id
     var isRoot = element.hasClass("post"); // to determine if I'm clicking on the post or on one of the buttons
     var rootElement = isRoot == true ? element : element.closest(".post"); //closest is a jquery function, which goes up the tree to find a parent with the selector
@@ -190,7 +222,7 @@ function createPostHtml(postData, largeFont = false) { //Reminder: default value
                 </div>
                 <div class='mainContentContainer'>
                     <div class='userImageContainer'>
-                        <img src='/${postedBy.profilePic}'>
+                        <img src='${postedBy.profilePic}'>
                     </div>
                     <div class='postContentContainer'>
                         <div class='header'>

@@ -17,6 +17,27 @@ router.get("/", async (req, res, next) => {
         // console.log(searchObj);
     }
 
+    if (searchObj.followingOnly !== undefined) {
+        var followingOnly = searchObj.followingOnly == "true";
+
+        if (followingOnly) {
+            var objectIds = [];
+
+            if (!req.session.user.following) {
+                req.session.user.following = [];
+            }
+
+            req.session.user.following.forEach(user => {
+                objectIds.push(user);
+            })
+
+            objectIds.push(req.session.user._id); //if we want to see our own posts
+            searchObj.postedBy = { $in: objectIds }; //find posts where postedBy is anywhere in the objectIds array
+        }
+
+        delete searchObj.followingOnly; //because followingOnly is not part of the User's schema
+    }
+
     var results = await getPosts(searchObj);
     res.status(200).send(results);
 });
