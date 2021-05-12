@@ -269,7 +269,7 @@ function createPostHtml(postData, largeFont = false) { //Reminder: default value
                 </div>
                 <div class='mainContentContainer'>
                     <div class='userImageContainer'>
-                        <img src='${postedBy.profilePic}'>
+                        <img src='/${postedBy.profilePic}'>
                     </div>
                     <div class='postContentContainer'>
                         <div class='header'>
