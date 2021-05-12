@@ -9,6 +9,7 @@ const UserSchema = new Schema({
     email: { type: String, require: true, trim: true, unique: true },
     password: { type: String, require: true },
     profilePic: { type: String, default: "images/profilePic.png" },
+    coverPhoto: { type: String },
     likes: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     retweets: [{ type: Schema.Types.ObjectId, ref: 'Post' }], //an array of all the posts the user has retweeted
     following: [{ type: Schema.Types.ObjectId, ref: 'User' }],

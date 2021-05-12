@@ -86,4 +86,27 @@ router.post("/profilePicture", upload.single("croppedImage"), async (req, res, n
 
 });
 
+router.post("/coverPhoto", upload.single("croppedImage"), async (req, res, next) => { //croppedImage is what was appended to formData in common.js, canvas.toBlob
+    if (!req.file) { //we have file in req, because we npm installed multer
+        console.log("No file uploaded with ajax request.");
+        return res.sendStatus(400);
+    }
+
+    var filePath = `uploads/images/${req.file.filename}.png`;
+    var tempPath = req.file.path;
+    var targetPath = path.join(__dirname, `../../${filePath}`);
+
+    fs.rename(tempPath, targetPath, async error => {
+        if (error != null) {
+            console.log(error);
+            return res.sendStatus(400);
+        }
+
+        // we use req.session.user so that the change is everywhere
+        req.session.user = await User.findByIdAndUpdate(req.session.user._id, { coverPhoto: filePath }, { new: true }); //findByIdAndUpdate returns the object before it is updated, we need to do {new:true} so it returns the object AFTER it is updated 
+        res.sendStatus(204); //success, but no content
+    })
+
+});
+
 module.exports = router;

@@ -103,6 +103,26 @@ $("#filePhoto").change(function () {
     }
 })
 
+$("#coverPhoto").change(function () {
+    if (this.files && this.files[0]) {
+        var reader = new FileReader();
+        reader.onload = (e) => {
+            var image = document.getElementById("coverPreview");
+            image.src = e.target.result;
+
+            if (cropper !== undefined) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(image, {
+                aspectRatio: 16 / 9,
+                background: false
+            });
+
+        }
+        reader.readAsDataURL(this.files[0]);
+    }
+})
+
 $("#imageUploadButton").click(() => {
     var canvas = cropper.getCroppedCanvas(); //the part inside the square gets selected
 
@@ -117,6 +137,29 @@ $("#imageUploadButton").click(() => {
 
         $.ajax({
             url: "/api/users/profilePicture",
+            type: "POST",
+            data: formData,
+            processData: false, //this forces jQuery not to convert formData to a string
+            contentType: false, //this forces jQuery not to add a contentType-header with this request (and we won't have a so called boundary string)
+            success: () => location.reload()
+        })
+    })
+})
+
+$("#coverPhotoButton").click(() => {
+    var canvas = cropper.getCroppedCanvas(); //the part inside the square gets selected
+
+    if (canvas == null) {
+        alert("Could not upload image. Make sure it is an image file.");
+        return;
+    }
+    //toBlob is used to store images and videos (converts to binary large object)
+    canvas.toBlob((blob) => {
+        var formData = new FormData();
+        formData.append("croppedImage", blob);
+
+        $.ajax({
+            url: "/api/users/coverPhoto",
             type: "POST",
             data: formData,
             processData: false, //this forces jQuery not to convert formData to a string
