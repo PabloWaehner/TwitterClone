@@ -17,6 +17,11 @@ router.get("/", async (req, res, next) => {
         // console.log(searchObj);
     }
 
+    if (searchObj.search !== undefined) {
+        searchObj.content = { $regex: searchObj.search, $options: "i" }; // $options: "i" will make it ignore the case (uppercase/lowercase)
+        delete searchObj.search; //search is not a valid property, so it will return no results
+    }
+
     if (searchObj.followingOnly !== undefined) {
         var followingOnly = searchObj.followingOnly == "true";
 
