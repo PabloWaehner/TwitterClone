@@ -1,4 +1,8 @@
+// this will all be in main-layout.pug, because of the addition there of script(src="/js/common.js")
+
 var cropper; //global variable
+var timer; //will be used in search.js and $("#userSearchTextbox").keydown((event) in this file
+var selectedUsers = [];
 
 $("#postTextarea, #replyTextarea").keyup(event => {
     var textbox = $(event.target);
@@ -212,6 +216,49 @@ $("#coverPhotoButton").click(() => {
             contentType: false, //this forces jQuery not to add a contentType-header with this request (and we won't have a so called boundary string)
             success: () => location.reload()
         })
+    })
+})
+
+$("#userSearchTextbox").keydown((event) => {
+    clearTimeout(timer);
+    var textbox = $(event.target);
+    var value = textbox.val();
+
+    //event.keyCode == 8 is the delete/backspace button. event.which is the jQuery equivalent, we need to add it because event.keyCode is deprecated in some browsers
+    if (value == "" && (event.which == 8 || event.keyCode == 8)) {
+        // remove user from selection
+        selectedUsers.pop();
+        updateSelectedUsersHtml();
+        $(".resultsContainer").html("");
+
+        if (selectedUsers.length == 0) {
+            $("#createChatButton").prop("disabled", true);
+        }
+
+        return;
+    }
+
+    timer = setTimeout(() => {
+        value = textbox.val().trim();
+
+        if (value == "") {
+            $(".resultsContainer").html("");
+        }
+        else {
+            searchUsers(value);
+        }
+    }, 1000)
+
+})
+
+$("#createChatButton").click(() => {
+    var data = JSON.stringify(selectedUsers); //we can't send an array to the server in its array form, we need to convert it to a string
+
+    $.post("/api/chats", { users: data }, chat => {
+
+        if (!chat || !chat._id) return alert("Invalid response from server.");
+
+        window.location.href = `/messages/${chat._id}`;
     })
 })
 
@@ -513,4 +560,53 @@ function createUserHtml(userData, showFollowButton) {
                 </div>
                 ${followButton}
             </div>`;
+}
+
+function searchUsers(searchTerm) {
+    $.get("/api/users", { search: searchTerm }, results => {
+        outputSelectableUsers(results, $(".resultsContainer"));
+    })
+}
+
+function outputSelectableUsers(results, container) {
+    container.html("");
+
+    results.forEach(result => {
+
+        if (result._id == userLoggedIn._id || selectedUsers.some(u => u._id == result._id)) {
+            //so one's own name doesn't appear on the search, or a user that we already selected
+            return;
+        }
+
+        var html = createUserHtml(result, false); //false indicates that the follow button will not appear
+        var element = $(html); //we make it a jQuery object so we can append a click handler on it
+        element.click(() => userSelected(result))
+
+        container.append(element);
+    });
+
+    if (results.length == 0) {
+        container.append("<span class='noResults'>No results found</span>")
+    }
+}
+
+function userSelected(user) {
+    selectedUsers.push(user);
+    updateSelectedUsersHtml();
+    $("#userSearchTextbox").val("").focus(); //when we select a user, we clear the textbox/input, but we keep the mouse focus there
+    $(".resultsContainer").html(""); //we then clear the results
+    $("#createChatButton").prop("disabled", false); //and we enable the chat button
+}
+
+function updateSelectedUsersHtml() {
+    var elements = [];
+
+    selectedUsers.forEach(user => {
+        var name = user.firstName + " " + user.lastName;
+        var userElement = $(`<span class='selectedUser'>${name}</span>`);
+        elements.push(userElement);
+    })
+
+    $(".selectedUser").remove(); //we remove all the elements with this class, otherwise the users get accumulated
+    $("#selectedUsers").prepend(elements);
 }
