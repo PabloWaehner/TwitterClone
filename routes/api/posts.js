@@ -166,6 +166,23 @@ router.delete("/:id", (req, res, next) => {
         })
 })
 
+router.put("/:id", async (req, res, next) => {
+    if (req.body.pinned !== undefined) {
+        await Post.updateMany({ postedBy: req.session.user }, { pinned: false }) //we want to set all the posts to pinned false first, because there can only be one pinned true 
+            .catch(error => {
+                console.log(error);
+                res.sendStatus(400);
+            })
+    }
+
+    Post.findByIdAndUpdate(req.params.id, req.body)
+        .then(() => res.sendStatus(204))
+        .catch(error => {
+            console.log(error);
+            res.sendStatus(400);
+        })
+})
+
 async function getPosts(filter) {
     var results = await Post.find(filter)
         .populate("postedBy") //without it, the post would have "undefined" user

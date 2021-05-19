@@ -406,3 +406,17 @@ button span {
   display: block;
   max-width: 100%;
 }
+
+/*Reminder: the element that has both classes*/
+.pinButton.active {
+  color: var(--blue);
+}
+
+.pinnedPostText {
+  font-size: 12px;
+  color: var(--greyText);
+}
+
+.pinnedPostContainer {
+  border-bottom: 10px solid rgba(230, 236, 240);
+}
