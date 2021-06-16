@@ -41,6 +41,7 @@ const messagesRoute = require('./routes/messagesRoutes');
 const postsApiRoute = require('./routes/api/posts');
 const usersApiRoute = require('./routes/api/users');
 const chatsApiRoute = require('./routes/api/chats');
+const messagesApiRoute = require('./routes/api/messages');
 
 app.use("/login", loginRoute);
 app.use("/register", registerRoute);
@@ -54,6 +55,7 @@ app.use("/messages", middleware.requireLogin, messagesRoute);
 app.use("/api/posts", postsApiRoute);
 app.use("/api/users", usersApiRoute);
 app.use("/api/chats", chatsApiRoute);
+app.use("/api/messages", messagesApiRoute);
 
 app.get("/", middleware.requireLogin, (req, res, next) => { //when the root of the site is accessed ("/"), first execute the step in between (requireLogin), and then the rest (that's why it's called middleware)
     var payload = {
