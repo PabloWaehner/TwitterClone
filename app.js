@@ -7,8 +7,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('./database');
 const session = require('express-session');
 
-
 const server = app.listen(port, () => console.log("Server listening on port " + port));
+const io = require('socket.io')(server, { pingTimeout: 60000, allowEIO3: true }); //pingTimeout: how many miliseconds without a pong packet to consider the connection closed
 
 app.set("view engine", "pug"); // the template engine used is pug (npm install pug) -> like handlebars
 app.set("views", "views"); //second argument is for the folder where it looks what to render
@@ -65,3 +65,25 @@ app.get("/", middleware.requireLogin, (req, res, next) => { //when the root of t
     }
     res.status(200).render("home", payload); //first parameter: home.pug, second parameter: data we want to send 
 });
+
+io.on("connection", socket => {
+    socket.on("setup", userData => { //userData will be what's passed in to emit("setup") in clientSocket.js (userLoggedIn)
+        socket.join(userData._id);
+        socket.emit("connected"); //this goes back to the client (clientSocket.js) and will be handled by socket.on("connected")
+    })
+    socket.on("join room", room => socket.join(room)); // "receives" what was sent on socket.emit("join room")
+    socket.on("typing", room => socket.in(room).emit("typing"));
+    socket.on("stop typing", room => socket.in(room).emit("stop typing"));
+    socket.on("new message", newMessage => {
+        var chat = newMessage.chat;
+
+        if (!chat.users) return console.log("Chat.users not defined");
+
+        chat.users.forEach(user => {
+
+            if (user._id == newMessage.sender._id) return;
+            console.log(user);
+            socket.in(user._id).emit("message received", newMessage);
+        })
+    });
+})
